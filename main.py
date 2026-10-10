@@ -5,11 +5,17 @@ import os
 import numpy as np
 import torch
 import torch.optim as optim
+import torch.nn as nn
 from torchvision import transforms
 
 from dataset import ConveyorSimulator
 from metrics import AccuracyMetric, MeanAveragePrecisionMetric, SegmentationIntersectionOverUnionMetric
 from visualizer import Visualizer
+
+
+from models.classification_network import classificationNet
+from models.detection_network import detectionNet, lossYolo
+
 
 TRAIN_VALIDATION_SPLIT = 0.9
 CLASS_PROBABILITY_THRESHOLD = 0.5
@@ -45,10 +51,12 @@ class ConveyorCnnTrainer():
     def _create_model(self, task):
         if task == 'classification':
             # À compléter
-            raise NotImplementedError()
+            #raise NotImplementedError()
+
+            return classificationNet()
         elif task == 'detection':
             # À compléter
-            raise NotImplementedError()
+            return detectionNet()
         elif task == 'segmentation':
             # À compléter
             raise NotImplementedError()
@@ -58,10 +66,10 @@ class ConveyorCnnTrainer():
     def _create_criterion(self, task):
         if task == 'classification':
             # À compléter
-            raise NotImplementedError()
+            return nn.BCEWithLogitsLoss() # a valider
         elif task == 'detection':
             # À compléter
-            raise NotImplementedError()
+            return lossYolo()
         elif task == 'segmentation':
             # À compléter
             raise NotImplementedError()
@@ -247,8 +255,26 @@ class ConveyorCnnTrainer():
         :return: La valeur de la fonction de coût pour le lot
         """
 
+
         # À compléter
-        raise NotImplementedError()
+        optimizer.zero_grad()
+        output = model(image)
+
+
+        #raise NotImplementedError()
+        if task == 'classification':
+            loss = criterion(output, class_labels)
+            metric.accumulate(output.detach(), class_labels)
+
+        elif task == 'detection':
+            raise NotImplementedError()
+        elif task == 'segmentation':
+            raise NotImplementedError()
+        else:
+            raise ValueError('Not supported task')
+        loss.backward()
+        optimizer.step()
+        return loss
 
     def _test_batch(self, task, model, criterion, metric, image, segmentation_target, boxes, class_labels):
         """
@@ -287,9 +313,20 @@ class ConveyorCnnTrainer():
                 Si un 0 est présent à (i, 2), aucune croix n'est présente dans l'image i.
         :return: La valeur de la fonction de coût pour le lot
         """
-
+        output = model(image)
         # À compléter
-        raise NotImplementedError()
+        if task == 'classification':
+            loss = criterion(output, class_labels)
+            metric.accumulate(output.detach(), class_labels)
+
+        elif task == 'detection':
+            raise NotImplementedError()
+        elif task == 'segmentation':
+            raise NotImplementedError()
+        else:
+            raise ValueError('Not supported task')
+
+        return loss
 
 
 if __name__ == '__main__':
