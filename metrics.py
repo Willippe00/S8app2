@@ -182,7 +182,8 @@ class MeanAveragePrecisionMetric(Metric):
         recalls = recalls[sorted_index]
         precisions = precisions[sorted_index]
 
-        return np.trapz(y=precisions, x=recalls)
+        #return np.trapz(y=precisions, x=recalls) ##déprécier
+        return np.trapezoid(y=precisions, x=recalls)
 
 
 def detection_intersection_over_union(box_a, box_b):

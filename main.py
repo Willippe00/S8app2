@@ -260,6 +260,11 @@ class ConveyorCnnTrainer():
         optimizer.zero_grad()
         output = model(image)
 
+        #print("Images :", image.shape)
+        #print("Output :", output.shape)
+        #print("Boxes :", boxes.shape)
+        #print("Exemple de boxes :", boxes[0])
+
 
         #raise NotImplementedError()
         if task == 'classification':
@@ -267,7 +272,8 @@ class ConveyorCnnTrainer():
             metric.accumulate(output.detach(), class_labels)
 
         elif task == 'detection':
-            raise NotImplementedError()
+            loss = criterion(output, boxes)
+            metric.accumulate(output.detach(), boxes)
         elif task == 'segmentation':
             raise NotImplementedError()
         else:
@@ -320,7 +326,8 @@ class ConveyorCnnTrainer():
             metric.accumulate(output.detach(), class_labels)
 
         elif task == 'detection':
-            raise NotImplementedError()
+            loss = criterion(output, boxes)
+            metric.accumulate(output.detach(), boxes)
         elif task == 'segmentation':
             raise NotImplementedError()
         else:
