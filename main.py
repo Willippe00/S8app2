@@ -15,6 +15,7 @@ from visualizer import Visualizer
 
 from models.classification_network import classificationNet
 from models.detection_network import detectionNet, lossYolo
+from models.segmentation_network import segmentationNet
 
 
 TRAIN_VALIDATION_SPLIT = 0.9
@@ -59,7 +60,7 @@ class ConveyorCnnTrainer():
             return detectionNet()
         elif task == 'segmentation':
             # À compléter
-            raise NotImplementedError()
+            return segmentationNet(1,4)
         else:
             raise ValueError('Not supported task')
 
@@ -71,8 +72,11 @@ class ConveyorCnnTrainer():
             # À compléter
             return lossYolo()
         elif task == 'segmentation':
+            return nn.CrossEntropyLoss()
             # À compléter
-            raise NotImplementedError()
+            # https://medium.com/@alphaalimamykamara/unet-is-a-well-known-convolutional-neural-network-cnn-architecture-introduced-by-olaf-ronneberger-005a5ec4351f
+            #return  nn.BCELoss()
+            #raise NotImplementedError()
         else:
             raise ValueError('Not supported task')
 
@@ -275,7 +279,9 @@ class ConveyorCnnTrainer():
             loss = criterion(output, boxes)
             metric.accumulate(output.detach(), boxes)
         elif task == 'segmentation':
-            raise NotImplementedError()
+
+            loss = criterion(output, segmentation_target)
+            metric.accumulate(output.detach(), segmentation_target)
         else:
             raise ValueError('Not supported task')
         loss.backward()
@@ -329,7 +335,8 @@ class ConveyorCnnTrainer():
             loss = criterion(output, boxes)
             metric.accumulate(output.detach(), boxes)
         elif task == 'segmentation':
-            raise NotImplementedError()
+            loss = criterion(output, segmentation_target)
+            metric.accumulate(output.detach(), segmentation_target)
         else:
             raise ValueError('Not supported task')
 
