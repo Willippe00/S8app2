@@ -1,5 +1,6 @@
 import json
 import os
+import random
 
 import numpy as np
 import torch
@@ -17,8 +18,9 @@ SHAPE_TO_CLASS = {
 
 
 class ConveyorSimulator(Dataset):
-    def __init__(self, data_path, transform=None, num_classes=4):
+    def __init__(self, data_path, transform=None, num_classes=4, augment=False):
         self._transform = transform
+        self._augment = augment
         self._data_path = data_path
         self._json_path = os.path.join(data_path, 'metaData.json')
         self._num_classes = num_classes
@@ -53,11 +55,37 @@ class ConveyorSimulator(Dataset):
         segmentation_target[segmentation_target == 0] = 4
         segmentation_target -= 1
 
+        if self._augment:
+            image, segmentation_target, boxes = self._augment_sample(
+                image, segmentation_target, boxes
+            )
+
         if self._transform is not None:
             image = self._transform(image)
         segmentation_target = torch.from_numpy(segmentation_target).long()
 
         return image[0:1, :, :], segmentation_target, boxes, class_labels
+
+    def _augment_sample(self, image, segmentation_target, boxes):
+        x_max = 1.0
+        y_max = 1.0
+        present = boxes[:, 0] == 1
+
+        # Flip horizontal : image + masque + pos_x
+        if random.random() < 0.5:
+            image = image[:, ::-1]
+            segmentation_target = segmentation_target[:, ::-1]
+            boxes[present, 1] = x_max - boxes[present, 1]
+
+        # Flip vertical : image + masque + pos_y
+        if random.random() < 0.5:
+            image = image[::-1, :]
+            segmentation_target = segmentation_target[::-1, :]
+            boxes[present, 2] = y_max - boxes[present, 2]
+
+        return (np.ascontiguousarray(image),
+                np.ascontiguousarray(segmentation_target),
+                boxes)
 
 
 if __name__ == '__main__':

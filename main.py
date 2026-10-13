@@ -52,8 +52,6 @@ class ConveyorCnnTrainer():
     def _create_model(self, task):
         if task == 'classification':
             # À compléter
-            #raise NotImplementedError()
-
             return classificationNet()
         elif task == 'detection':
             # À compléter
@@ -134,12 +132,16 @@ class ConveyorCnnTrainer():
         params_train = {'batch_size': self._args.batch_size, 'shuffle': True, 'num_workers': 4}
         params_validation = {'batch_size': self._args.batch_size, 'shuffle': False, 'num_workers': 4}
 
-        dataset_trainval = ConveyorSimulator(self._train_data_path, self.transform)
-        dataset_train, dataset_validation = torch.utils.data.random_split(dataset_trainval,
-                                                                          [int(len(
-                                                                              dataset_trainval) * TRAIN_VALIDATION_SPLIT),
-                                                                           int(len(dataset_trainval) - int(len(
-                                                                               dataset_trainval) * TRAIN_VALIDATION_SPLIT))])
+        dataset_train_full = ConveyorSimulator(self._train_data_path, self.transform, augment=True)
+        dataset_val_full = ConveyorSimulator(self._train_data_path, self.transform, augment=False)
+
+        n = len(dataset_train_full)
+        n_train = int(n * TRAIN_VALIDATION_SPLIT)
+        indices = torch.randperm(n, generator=torch.Generator().manual_seed(42).tolist())
+
+        dataset_train = torch.utils.data.Subset(dataset_train_full, indices[:n_train])
+        dataset_validation = torch.utils.data.Subset(dataset_val_full, indices[n_train:])
+
         train_loader = torch.utils.data.DataLoader(dataset_train, **params_train)
         validation_loader = torch.utils.data.DataLoader(dataset_validation, **params_validation)
 

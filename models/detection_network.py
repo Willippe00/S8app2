@@ -2,19 +2,20 @@ import torch
 import torch.nn as nn
 
 
-###400 000 params
+# ##400 000 params
 
-##implementer un yolo custom
+# #implementer un yolo custom
 
 
 class detectionNet(nn.Module):
 
     def __init__(self):
-
         super(detectionNet, self).__init__()
 
         ### Down scale
-        self.conv_1 = nn.Conv2d(in_channels=1, out_channels=24, kernel_size=5, stride=1, padding=2) #nn.Conv2d(in_channels=1, out_channels=24, kernel_size=5, stride=2, padding=2)
+        self.conv_1 = nn.Conv2d(in_channels=1, out_channels=24, kernel_size=5, stride=1,
+                                padding=2)
+        #             nn.Conv2d(in_channels=1, out_channels=24, kernel_size=5, stride=2, padding=2)
         self.Lrelu1 = nn.LeakyReLU()
         self.maxpool1 = nn.MaxPool2d(kernel_size=2, stride=2)
 
@@ -38,9 +39,10 @@ class detectionNet(nn.Module):
         self.conv_6 = nn.Conv2d(in_channels=128, out_channels=72, kernel_size=3, stride=1, padding=1)
         self.Lrelu6 = nn.LeakyReLU()
 
-        #self.conv_7 = nn.Conv2d(in_channels=72, out_channels=8, kernel_size=1, stride=1, padding=0) #nn.Conv2d(in_channels=72, out_channels=13, kernel_size=1, stride=1, padding=0)
+        # self.conv_7 = nn.Conv2d(in_channels=72, out_channels=8, kernel_size=1, stride=1, padding=0)
+        # nn.Conv2d(in_channels=72, out_channels=13, kernel_size=1, stride=1, padding=0)
 
-        #self.grid = nn.AdaptiveAvgPool2d((7, 7))
+        # self.grid = nn.AdaptiveAvgPool2d((7, 7))
         self.conv_7 = nn.Conv2d(in_channels=72, out_channels=21, kernel_size=1, stride=1, padding=0)
 
         self.grid = nn.AdaptiveAvgPool2d((1, 1))
@@ -56,22 +58,20 @@ class detectionNet(nn.Module):
 
         x3 = self.conv_3(max2)
         r3 = self.Lrelu3(x3)
-        #max3 = self.maxpool3(r3)
+        # max3 = self.maxpool3(r3)
 
         x4 = self.conv_4(r3)
         r4 = self.Lrelu4(x4)
-        #max4 = self.maxpool4(r4)
+        # max4 = self.maxpool4(r4)
 
         x5 = self.conv_5(r4)
         r5 = self.Lrelu5(x5)
-        #max5 = self.maxpool5(r5)
+        # max5 = self.maxpool5(r5)
 
         x6 = self.conv_6(r5)
         r6 = self.Lrelu6(x6)
 
-
-
-        #####a modifier
+        # ####a modifier
 
         x7 = self.conv_7(r6)
 
@@ -93,12 +93,11 @@ class detectionNet(nn.Module):
         return output
 
 
-
 ## custom loss
 # source https://medium.com/@mustafa.kamalzhd/writing-a-custom-loss-in-pytorch-part-1-7dd857934f48
 
 ##loss de yolo
-#https://medium.com/@whyamit404/how-to-implement-a-yolo-object-detector-from-scratch-in-pytorch-e310829d92e6
+# https://medium.com/@whyamit404/how-to-implement-a-yolo-object-detector-from-scratch-in-pytorch-e310829d92e6
 class lossYolo(nn.Module):
 
     def __init__(self):
@@ -106,7 +105,6 @@ class lossYolo(nn.Module):
 
     def forward(self, output, target):
         target_yolo = torch.zeros_like(output)
-
 
         N = output.shape[0]
 
@@ -142,9 +140,8 @@ class lossYolo(nn.Module):
         Lco = torch.sum((pred_conf[object_mask] - target_conf[object_mask]) ** 2)
         Lcso = torch.sum(pred_conf[noobject_mask] ** 2)
 
-
         # Classification Loss
-        #Lclasse = torch.sum((pred_classes[object_mask] - target_classes[object_mask]) ** 2)
+        # Lclasse = torch.sum((pred_classes[object_mask] - target_classes[object_mask]) ** 2)
         ###suggestion meilleur
         Lclasse = nn.functional.binary_cross_entropy(
             pred_classes[object_mask],
@@ -152,8 +149,6 @@ class lossYolo(nn.Module):
             reduction='sum'
         )
 
+        Lyolo = 5 * Lxywh + Lco + 3 * Lcso + Lclasse
 
-        Lyolo = 5 * Lxywh + Lco + 3* Lcso + Lclasse
-
-        return  Lyolo
-
+        return Lyolo
