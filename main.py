@@ -137,7 +137,7 @@ class ConveyorCnnTrainer():
 
         n = len(dataset_train_full)
         n_train = int(n * TRAIN_VALIDATION_SPLIT)
-        indices = torch.randperm(n, generator=torch.Generator().manual_seed(42).tolist())
+        indices = torch.randperm(n, generator=torch.Generator().manual_seed(42)).tolist()
 
         dataset_train = torch.utils.data.Subset(dataset_train_full, indices[:n_train])
         dataset_validation = torch.utils.data.Subset(dataset_val_full, indices[n_train:])
